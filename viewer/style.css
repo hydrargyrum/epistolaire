@@ -1,0 +1,18 @@
+.message {
+	border: solid white 1px;
+	margin: 1em;
+	padding: 1em;
+	clear: both;
+}
+
+.message-sent {
+	float: right;
+	clear: both;
+}
+
+.message-received {
+	float: left;
+	clear: both;
+	background: #324759;
+}
+
