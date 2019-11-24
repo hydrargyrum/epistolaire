@@ -15,7 +15,7 @@ import java.nio.charset.Charset
 class MmsDumper(val contentResolver: ContentResolver) {
     fun getJson(): JSONObject {
         val jobj = JSONObject()
-        jobj.put("messages", allMessages())
+        jobj.put("conversations", allMessages())
         return jobj
     }
 
