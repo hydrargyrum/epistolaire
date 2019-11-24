@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
         }
 
-        Toast.makeText(applicationContext,"Backup done", Toast.LENGTH_SHORT).show()
+        Toast.makeText(applicationContext,"Backup done to ${myExternalFile}", Toast.LENGTH_LONG).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
