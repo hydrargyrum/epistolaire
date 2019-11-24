@@ -1,4 +1,4 @@
-package com.example.myapplication
+package re.indigo.epistolaire
 
 import org.junit.Test
 

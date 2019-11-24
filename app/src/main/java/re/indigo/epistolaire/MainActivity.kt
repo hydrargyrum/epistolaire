@@ -1,4 +1,4 @@
-package com.example.myapplication
+package re.indigo.epistolaire
 
 import android.Manifest
 import android.content.pm.PackageManager

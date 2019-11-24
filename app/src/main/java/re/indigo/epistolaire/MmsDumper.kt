@@ -1,4 +1,4 @@
-package com.example.myapplication
+package re.indigo.epistolaire
 
 import android.content.ContentResolver
 import android.net.Uri

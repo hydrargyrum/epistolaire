@@ -1,4 +1,4 @@
-package com.example.myapplication
+package re.indigo.epistolaire
 
 import android.database.Cursor
 import org.json.JSONArray
