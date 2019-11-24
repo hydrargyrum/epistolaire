@@ -62,37 +62,56 @@ class MmsDumper(val contentResolver: ContentResolver) {
         return jarray
     }
 
+    fun forceMillisDate(message: JSONObject, field: String) {
+        /* sometimes the sms are in millis and the mms in secs... */
+        val value = message.optLong(field)
+        if (value != 0L && value < 500000000000L) {
+            message.put(field, value * 1000)
+        }
+    }
+
     fun getThread(id: Int): JSONArray {
         val jarray = JSONArray()
 
-        val cursor = contentResolver.query(
+        var cursor = contentResolver.query(
             Uri.parse("content://sms/"), null,
             "thread_id=$id", null, null
         )
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                jarray.put(Utils().rowToJson(cursor))
+                val jobj = Utils().rowToJson(cursor)
+
+                forceMillisDate(jobj, "date")
+                forceMillisDate(jobj, "date_sent")
+
+                jarray.put(jobj)
             } while (cursor.moveToNext())
 
             cursor.close()
         }
 
-        val cursor2 = contentResolver.query(
+        cursor = contentResolver.query(
             Uri.parse("content://mms/"), null,
             "thread_id=$id", null, null
         )
 
-        if (cursor2 != null && cursor2.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
-                val jmms = Utils().rowToJson(cursor2)
+                val jmms = Utils().rowToJson(cursor)
+
+                forceMillisDate(jmms, "date")
+                forceMillisDate(jmms, "date_sent")
+
                 val partId = jmms.getInt("_id")
                 jmms.put("parts", getParts(partId))
 
-                jarray.put(jmms)
-            } while (cursor2.moveToNext())
+                jmms.put("addresses", getMMSAddresses(jmms.getInt("_id")))
 
-            cursor2.close()
+                jarray.put(jmms)
+            } while (cursor.moveToNext())
+
+            cursor.close()
         }
 
         return jarray
@@ -123,34 +142,6 @@ class MmsDumper(val contentResolver: ContentResolver) {
         return jarray
     }
 
-    fun getMmsText2(id: Int): String {
-        val partURI = Uri.parse("content://mms/part/$id")
-        var stream: InputStream? = null
-        val sb = StringBuilder()
-        try {
-            val stream = contentResolver.openInputStream(partURI)
-            if (stream != null) {
-                val isr = InputStreamReader(stream, "UTF-8")
-                val reader = BufferedReader(isr)
-                var temp = reader.readLine()
-                while (temp != null) {
-                    sb.append(temp)
-                    temp = reader.readLine()
-                }
-            }
-        } catch (e: IOException) {
-        } finally {
-            if (stream != null) {
-                try {
-                    stream!!.close()
-                } catch (e: IOException) {
-                }
-
-            }
-        }
-        return sb.toString()
-    }
-
     fun getMmsText(id: Int): String {
         val partURI = Uri.parse("content://mms/part/$id")
         try {
@@ -179,11 +170,28 @@ class MmsDumper(val contentResolver: ContentResolver) {
         }
     }
 
-    /*fun getSms(id: String): JSONObject {
+    fun getMMSAddresses(id: Int): JSONArray {
+        val jarray = JSONArray()
 
+        /* values come from PduHeaders */
+        val type_from = 137
+        val type_to = 151
+        val type_cc = 130
+        val type_bcc = 129
+
+        for (addrtype in arrayOf(type_from, type_to, type_cc, type_bcc)) {
+            val cursor = contentResolver.query(
+                Uri.parse("content://mms/$id/addr"), arrayOf("address"),
+                "type=$addrtype AND msg_id=$id", null, null
+            )
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    jarray.put(cursor.getString(0))
+                } while (cursor.moveToNext())
+
+                cursor.close()
+            }
+        }
+        return jarray
     }
-
-    fun getMms(id: String): JSONObject {
-
-    }*/
 }
