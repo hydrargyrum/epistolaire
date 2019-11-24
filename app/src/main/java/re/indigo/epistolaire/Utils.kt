@@ -12,7 +12,7 @@ class Utils {
             val key = cursor.getColumnName(i)
 
             when (cursor.getType(i)) {
-                Cursor.FIELD_TYPE_INTEGER -> res.put(key, cursor.getInt(i))
+                Cursor.FIELD_TYPE_INTEGER -> res.put(key, cursor.getLong(i))
                 Cursor.FIELD_TYPE_FLOAT -> res.put(key, cursor.getFloat(i))
                 Cursor.FIELD_TYPE_STRING -> res.put(key, cursor.getString(i))
                 Cursor.FIELD_TYPE_NULL -> res.put(key, JSONObject.NULL)
