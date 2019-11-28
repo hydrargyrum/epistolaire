@@ -46,7 +46,8 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_SMS), wtf)
         }
 
-        addLine("Starting backup")
+        addLine("--------------------")
+        addLine("Please wait, backup is in progress. It can take a while if you have a lot of SMSes or MMSes.")
         DumpTask().execute()
     }
 
@@ -94,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
             if (exc != null) {
                 progressBar.visibility = View.GONE
-                addLine(exc!!)
+                addLine("Encountered an error :( " + exc!!.toString())
                 return
             }
 
@@ -111,12 +112,13 @@ class MainActivity : AppCompatActivity() {
                     fileOutPutStream.close()
                 }
             } catch (e: IOException) {
-                addLine(e.toString())
+                addLine("Encountered an error :( " + e.toString())
             }
 
             progressBar.visibility = View.GONE
 
-            addLine("Backup done to $myExternalFile")
+            addLine("Done! Backup was saved to $myExternalFile")
+            addLine("See https://gitlab.com/hydrargyrum/epistolaire for viewing backup as HTML")
         }
     }
 }
