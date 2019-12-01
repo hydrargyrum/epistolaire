@@ -1,0 +1,1 @@
+* build: gradlew security fix spot by f-droid bot.
