@@ -1,0 +1,302 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "definitions": {
+        "sms": {
+            "title": "SMS",
+            "description": "Columns are mapped from content://sms",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "title": "Message ID",
+                    "type": "integer"
+                },
+                "thread_id": {
+                    "title": "Thread ID",
+                    "type": "integer"
+                },
+                "address": {
+                    "title": "Phone number of the peer",
+                    "type": "string"
+                },
+                "person": {
+                    "title": "Unknown field",
+                    "type": "null"
+                },
+                "date": {
+                    "title": "Timestamp (in milliseconds since epoch) when the message was written to phone",
+                    "description": "Sending date if sent to the peer, reception date if received from peer",
+                    "type": "integer"
+                },
+                "date_sent": {
+                    "title": "Timestamp when the message was sent (might be 0)",
+                    "type": "integer"
+                },
+                "protocol": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "read": {
+                    "title": "1 if the message is read by us",
+                    "type": "integer"
+                },
+                "status": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "type": {
+                    "title": "1 if the message was received from the peer, 2 if sent to the peer",
+                    "type": "integer"
+                },
+                "reply_path_present": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "subject": {
+                    "title": "Unknown field",
+                    "type": "null"
+                },
+                "body": {
+                    "title": "Text content of the message",
+                    "type": "string"
+                },
+                "service_center": {
+                    "title": "Operator number for SMS sending",
+                    "type": "string"
+                },
+                "locked": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "sub_id": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "error_code": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                },
+                "creator": {
+                    "title": "Local app which created this message",
+                    "type": "string"
+                },
+                "seen": {
+                    "title": "Unknown field",
+                    "type": "integer"
+                }
+            }
+        },
+        "mms_part": {
+            "title": "MMS part",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "title": "Part ID",
+                    "type": "integer"
+                },
+                "mid": {
+                    "title": "MMS id",
+                    "type": "integer"
+                },
+                "seq": {
+                    "title": "Part number in the MMS (may start at -1)",
+                    "type": "integer"
+                },
+                "ct": {
+                    "title": "MIME type",
+                    "type": "string"
+                },
+                "name": {
+                    "title": "File name of the part (not always filled)",
+                    "type": "string"
+                },
+                "chset": {
+                    "type": "integer"
+                },
+                "cd": {
+                    "type": "string"
+                },
+                "fn": {
+                    "type": "null"
+                },
+                "cid": {
+                    "title": "Content ID that can be reffered to in the SMIL",
+                    "type": "string"
+                },
+                "cl": {
+                    "title": "File name of the part",
+                    "type": "string"
+                },
+                "ctt_s": {
+                    "type": "null"
+                },
+                "ctt_t": {
+                    "type": "null"
+                },
+                "_data": {
+                    "title": "Storage path",
+                    "type": "null"
+                },
+                "text": {
+                    "title": "Text of the part, if it is a text part",
+                    "type": "string"
+                },
+                "my_content": {
+                    "title": "Base64-encoded content of the part, if it is a binary part",
+                    "type": "string"
+                }
+            }
+        },
+        "mms": {
+            "title": "MMS",
+            "description": "Columns are mapped from content://mms",
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "title": "Message ID",
+                    "type": "integer"
+                },
+                "thread_id": {
+                    "title": "Thread ID",
+                    "type": "integer"
+                },
+                "date": {
+                    "title": "Timestamp (in milliseconds since epoch) when the message was written to phone",
+                    "type": "integer"
+                },
+                "date_sent": {
+                    "title": "Date when the message was sent by us (0 if it was sent by the peer)",
+                    "type": "integer"
+                },
+                "msg_box": {
+                    "type": "integer"
+                },
+                "read": {
+                    "type": "integer"
+                },
+                "m_id": {
+                    "type": "string"
+                },
+                "sub": {
+                    "type": "null"
+                },
+                "sub_cs": {
+                    "type": "null"
+                },
+                "ct_t": {
+                    "title": "MIME type",
+                    "type": "string"
+                },
+                "ct_l": {
+                    "type": "null"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "m_cls": {
+                    "type": "string"
+                },
+                "m_type": {
+                    "type": "integer"
+                },
+                "v": {
+                    "type": "integer"
+                },
+                "m_size": {
+                    "type": "integer"
+                },
+                "pri": {
+                    "type": "integer"
+                },
+                "rr": {
+                    "type": "integer"
+                },
+                "rpt_a": {
+                    "type": "null"
+                },
+                "resp_st": {
+                    "type": "integer"
+                },
+                "st": {
+                    "type": "null"
+                },
+                "tr_id": {
+                    "type": "string"
+                },
+                "retr_st": {
+                    "type": "null"
+                },
+                "retr_txt": {
+                    "type": "null"
+                },
+                "retr_txt_cs": {
+                    "type": "null"
+                },
+                "read_status": {
+                    "type": "null"
+                },
+                "ct_cls": {
+                    "type": "null"
+                },
+                "resp_txt": {
+                    "type": "null"
+                },
+                "d_tm": {
+                    "type": "null"
+                },
+                "d_rpt": {
+                    "type": "integer"
+                },
+                "locked": {
+                    "type": "integer"
+                },
+                "sub_id": {
+                    "type": "integer"
+                },
+                "creator": {
+                    "title": "Local app which created this message",
+                    "type": "string"
+                },
+                "seen": {
+                    "type": "integer"
+                },
+                "text_only": {
+                    "type": "integer"
+                },
+                "parts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mms_part"
+                    }
+                },
+                "addresses": {
+                    "title": "Phone number list of the participants",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "type": "object",
+    "properties": {
+        "conversations": {
+            "type": "array",
+            "title": "Conversation list",
+            "items": {
+                "type": "array",
+                "title": "Conversation",
+                "items": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/sms"
+                        },
+                        {
+                            "$ref": "#/definitions/mms"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

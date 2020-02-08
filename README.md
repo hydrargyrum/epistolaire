@@ -28,6 +28,8 @@ Epistolaire is an Android app to backup SMSes AND MMSes (unlike most "SMS backup
     * examples: _id, mid, text, ct, name
 * MMS parts having a binary file have the content encoded as base64 in the "my_content" key
 
+See [`backup.schema.json` file](backup.schema.json) for a JSON-schema description.
+
 ## JSON to HTML
 
 The JSON to HTML converter is a separate Python script in the "viewer" directory.
