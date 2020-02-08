@@ -2,6 +2,8 @@
 
 Epistolaire is an Android app to backup SMSes AND MMSes (unlike most "SMS backup" apps), in a nutshell.
 
+[![Get it on F-Droid](https://f-droid.org/badge/get-it-on.png)](https://f-droid.org/packages/re.indigo.epistolaire/)
+
 ## Why use it?
 
 * saves SMS/MMSes to a JSON file that's very close to a dump of Android's message database
@@ -34,6 +36,18 @@ See [`backup.schema.json` file](backup.schema.json) for a JSON-schema descriptio
 
 The JSON to HTML converter is a separate Python script in the "viewer" directory.
 It will create an HTML file per conversation.
+
+    cd viewer
+    ./converter.py path/to/backup.json
+
+## Privacy
+
+Epistolaire doesn't upload your messages anywhere. It just dumps a JSON file on your device.
+Make sure any third-party app doesn't harvest your device's files though.
+
+## Why isn't Epistolaire on google-play
+
+I don't use google-play, and I don't intend to ever do, so I won't upload Epistolaire on it.
 
 ## License
 
