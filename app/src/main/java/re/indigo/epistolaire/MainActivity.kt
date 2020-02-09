@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 val fileOutPutStream = FileOutputStream(myExternalFile)
 
                 try {
-                    fileOutPutStream.write(jobj.toString().toByteArray())
+                    JsonWriter(fileOutPutStream).dump(jobj!!)
                 } finally {
                     fileOutPutStream.close()
                 }
