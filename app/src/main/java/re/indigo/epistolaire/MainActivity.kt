@@ -92,9 +92,13 @@ class MainActivity : AppCompatActivity() {
         override fun onPostExecute(jobj: JSONObject?) {
             super.onPostExecute(jobj)
 
-            if (exc != null) {
+            if (exc != null || jobj == null) {
                 progressBar.visibility = View.GONE
-                addLine("Encountered an error :( " + exc!!.toString())
+                if (exc != null) {
+                    addLine("Encountered an error :( " + exc.toString())
+                } else {
+                    addLine("Encountered an error :( JSON is null")
+                }
                 return
             }
 
