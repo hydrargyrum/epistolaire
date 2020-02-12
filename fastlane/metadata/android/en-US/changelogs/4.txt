@@ -1,0 +1,2 @@
+* Avoid out-of-memory when there are thousands of messages
+* Remove unused menu
