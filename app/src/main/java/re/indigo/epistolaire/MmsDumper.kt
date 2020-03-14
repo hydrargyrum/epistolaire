@@ -8,6 +8,7 @@ package re.indigo.epistolaire
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -15,6 +16,8 @@ import java.nio.charset.Charset
 
 
 class MmsDumper(val contentResolver: ContentResolver) {
+    private val TAG = "MmsDumper"
+
     fun getJson(): JSONObject {
         val jobj = JSONObject()
         jobj.put("conversations", allMessages())
@@ -22,14 +25,17 @@ class MmsDumper(val contentResolver: ContentResolver) {
     }
 
     fun allMessages(): JSONArray {
+        val uri = Uri.parse("content://mms-sms/conversations")
         val cursor = contentResolver.query(
-            Uri.parse("content://mms-sms/conversations"), arrayOf("thread_id"), null, null, null
+            uri, arrayOf("thread_id"), null, null, null
             //Uri.parse("content://mms/"), null, "ct_t=\"application/vnd.wap.multipart.related\"", null, null
         )
 
         val jarray = JSONArray()
 
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor == null) {
+            Log.e(TAG, "querying conversation list $uri failed")
+        } else if (cursor.moveToFirst()) {
             do {
                 val threadId = cursor.getInt(0)
                 jarray.put(getThread(threadId))
@@ -75,12 +81,15 @@ class MmsDumper(val contentResolver: ContentResolver) {
     fun getThread(id: Int): JSONArray {
         val jarray = JSONArray()
 
+        var uri = Uri.parse("content://sms/")
         var cursor = contentResolver.query(
-            Uri.parse("content://sms/"), null,
+            uri, null,
             "thread_id=$id", null, null
         )
 
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor == null) {
+            Log.e(TAG,"querying sms for thread $uri failed")
+        } else if (cursor.moveToFirst()) {
             do {
                 val jobj = Utils().rowToJson(cursor)
 
@@ -93,12 +102,15 @@ class MmsDumper(val contentResolver: ContentResolver) {
             cursor.close()
         }
 
+        uri = Uri.parse("content://mms/")
         cursor = contentResolver.query(
-            Uri.parse("content://mms/"), null,
+            uri, null,
             "thread_id=$id", null, null
         )
 
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor == null) {
+            Log.e(TAG, "querying mms for thread $uri failed")
+        } else if (cursor.moveToFirst()) {
             do {
                 val jmms = Utils().rowToJson(cursor)
 
@@ -122,12 +134,15 @@ class MmsDumper(val contentResolver: ContentResolver) {
     fun getParts(mmsId: Int): JSONArray {
         val jarray = JSONArray()
 
+        val uri = Uri.parse("content://mms/part")
         val cursor = contentResolver.query(
-            Uri.parse("content://mms/part"), null,
+            uri, null,
             "mid=$mmsId", null, null
         )
 
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor == null) {
+            Log.e(TAG, "querying parts of mms $uri failed")
+        } else if (cursor.moveToFirst()) {
             do {
                 val jpart = Utils().rowToJson(cursor)
                 if (jpart.getString("ct").startsWith("image/")) {
@@ -148,12 +163,19 @@ class MmsDumper(val contentResolver: ContentResolver) {
         val partURI = Uri.parse("content://mms/part/$id")
         try {
             val stream = contentResolver.openInputStream(partURI)
+
+            if (stream == null) {
+                Log.e(TAG, "stream for mms text part $partURI is null")
+                return ""
+            }
+
             try {
                 return stream!!.readBytes().toString(Charset.forName("UTF-8"))
             } finally {
                 stream!!.close()
             }
         } catch (e: IOException) {
+            Log.e(TAG, "failed to read MMS text, assuming empty text", e)
             return ""
         }
     }
@@ -162,12 +184,19 @@ class MmsDumper(val contentResolver: ContentResolver) {
         val partURI = Uri.parse("content://mms/part/$id")
         try {
             val stream = contentResolver.openInputStream(partURI)
+
+            if (stream == null) {
+                Log.e(TAG, "stream for mms binary part $partURI is null")
+                return ""
+            }
+
             try {
                 return Base64.encodeToString(stream!!.readBytes(), Base64.DEFAULT)
             } finally {
                 stream!!.close()
             }
         } catch (e: IOException) {
+            Log.e(TAG, "failed to read MMS part, assuming empty part", e)
             return ""
         }
     }
@@ -182,11 +211,15 @@ class MmsDumper(val contentResolver: ContentResolver) {
         val type_bcc = 129
 
         for (addrtype in arrayOf(type_from, type_to, type_cc, type_bcc)) {
+            val addrURI = Uri.parse("content://mms/$id/addr")
             val cursor = contentResolver.query(
-                Uri.parse("content://mms/$id/addr"), arrayOf("address"),
+                addrURI, arrayOf("address"),
                 "type=$addrtype AND msg_id=$id", null, null
             )
-            if (cursor != null && cursor.moveToFirst()) {
+
+            if (cursor == null) {
+                Log.e(TAG, "querying address $addrURI failed")
+            } else if (cursor.moveToFirst()) {
                 do {
                     jarray.put(cursor.getString(0))
                 } while (cursor.moveToNext())

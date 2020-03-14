@@ -28,6 +28,8 @@ https://stackoverflow.com/questions/3012287/how-to-read-mms-data-in-android
  */
 
 class MainActivity : AppCompatActivity() {
+    private val TAG = "MainActivity"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -78,6 +80,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 return dumper.getJson()
             } catch (e: Exception) {
+                Log.e(TAG, "crash when dumping messages database", e)
                 exc = e.toString()
                 return null
             }
@@ -95,9 +98,10 @@ class MainActivity : AppCompatActivity() {
             if (exc != null || jobj == null) {
                 progressBar.visibility = View.GONE
                 if (exc != null) {
-                    addLine("Encountered an error :( " + exc.toString())
+                    addLine("Encountered an error dumping database :( " + exc.toString())
                 } else {
-                    addLine("Encountered an error :( JSON is null")
+                    Log.e(TAG, "dump is null, why?")
+                    addLine("Encountered an error :( dump is null")
                 }
                 return
             }
@@ -105,7 +109,7 @@ class MainActivity : AppCompatActivity() {
             // TODO: ask where to save? ACTION_OPEN_DOCUMENT_TREE
 
             val myExternalFile = File(getExternalFilesDir("."), "backup.json")
-            Log.e("TAG", "plop ${myExternalFile}")
+            Log.i(TAG, "writing ${myExternalFile}")
             try {
                 val fileOutPutStream = FileOutputStream(myExternalFile)
 
@@ -115,12 +119,18 @@ class MainActivity : AppCompatActivity() {
                     fileOutPutStream.close()
                 }
             } catch (e: IOException) {
-                addLine("Encountered an error :( " + e.toString())
+                progressBar.visibility = View.GONE
+
+                Log.e(TAG, "error when writing ${myExternalFile}", e)
+                addLine("Encountered an error writing JSON file :( " + e.toString())
+
+                return
             }
 
             progressBar.visibility = View.GONE
 
-            addLine("Done! Backup was saved to $myExternalFile")
+            Log.i(TAG, "backup successful")
+            addLine("Done! Backup was saved to ${myExternalFile.toURI()}")
             addLine("See https://gitlab.com/hydrargyrum/epistolaire for viewing backup as HTML")
         }
     }
