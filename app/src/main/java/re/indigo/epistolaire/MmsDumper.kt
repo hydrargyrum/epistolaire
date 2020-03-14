@@ -169,10 +169,8 @@ class MmsDumper(val contentResolver: ContentResolver) {
                 return ""
             }
 
-            try {
-                return stream!!.readBytes().toString(Charset.forName("UTF-8"))
-            } finally {
-                stream!!.close()
+            stream.use {
+                return stream.readBytes().toString(Charset.forName("UTF-8"))
             }
         } catch (e: IOException) {
             Log.e(TAG, "failed to read MMS text, assuming empty text", e)
@@ -190,10 +188,8 @@ class MmsDumper(val contentResolver: ContentResolver) {
                 return ""
             }
 
-            try {
-                return Base64.encodeToString(stream!!.readBytes(), Base64.DEFAULT)
-            } finally {
-                stream!!.close()
+            stream.use {
+                return Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
             }
         } catch (e: IOException) {
             Log.e(TAG, "failed to read MMS part, assuming empty part", e)

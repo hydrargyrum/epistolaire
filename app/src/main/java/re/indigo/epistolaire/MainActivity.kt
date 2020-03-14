@@ -113,10 +113,8 @@ class MainActivity : AppCompatActivity() {
             try {
                 val fileOutPutStream = FileOutputStream(myExternalFile)
 
-                try {
+                fileOutPutStream.use {
                     JsonWriter(fileOutPutStream).dump(jobj!!)
-                } finally {
-                    fileOutPutStream.close()
                 }
             } catch (e: IOException) {
                 progressBar.visibility = View.GONE
