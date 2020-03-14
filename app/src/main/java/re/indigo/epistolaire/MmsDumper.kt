@@ -18,9 +18,13 @@ import java.nio.charset.Charset
 class MmsDumper(val contentResolver: ContentResolver) {
     private val TAG = "MmsDumper"
 
+    val errors = JSONArray()
+
     fun getJson(): JSONObject {
         val jobj = JSONObject()
+
         jobj.put("conversations", allMessages())
+        jobj.put("errors", errors)
         return jobj
     }
 
@@ -34,7 +38,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
         val jarray = JSONArray()
 
         if (cursor == null) {
-            Log.e(TAG, "querying conversation list $uri failed")
+            val msg = "failed to list conversations $uri"
+            Log.e(TAG, msg)
+            errors.put(msg)
         } else if (cursor.moveToFirst()) {
             do {
                 val threadId = cursor.getInt(0)
@@ -65,7 +71,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
         )
 
         if (cursor == null) {
-            Log.e(TAG,"querying sms for thread $uri failed")
+            val msg = "failed to list sms in thread $uri $id"
+            Log.e(TAG, msg)
+            errors.put(msg)
         } else if (cursor.moveToFirst()) {
             do {
                 val jobj = Utils().rowToJson(cursor)
@@ -86,7 +94,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
         )
 
         if (cursor == null) {
-            Log.e(TAG, "querying mms for thread $uri failed")
+            val msg = "failed to list mms in thread $uri $id"
+            Log.e(TAG, msg)
+            errors.put(msg)
         } else if (cursor.moveToFirst()) {
             do {
                 val jmms = Utils().rowToJson(cursor)
@@ -118,7 +128,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
         )
 
         if (cursor == null) {
-            Log.e(TAG, "querying parts of mms $uri failed")
+            val msg = "failed listing parts of mms $uri $mmsId"
+            Log.e(TAG, msg)
+            errors.put(msg)
         } else if (cursor.moveToFirst()) {
             do {
                 val jpart = Utils().rowToJson(cursor)
@@ -142,7 +154,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
             val stream = contentResolver.openInputStream(partURI)
 
             if (stream == null) {
-                Log.e(TAG, "stream for mms text part $partURI is null")
+                val msg = "failed opening stream for mms text part $partURI"
+                Log.e(TAG, msg)
+                errors.put(msg)
                 return ""
             }
 
@@ -150,7 +164,10 @@ class MmsDumper(val contentResolver: ContentResolver) {
                 return stream.readBytes().toString(Charset.forName("UTF-8"))
             }
         } catch (e: IOException) {
-            Log.e(TAG, "failed to read MMS text, assuming empty text", e)
+            val msg = "failed to read MMS text on $partURI"
+            Log.e(TAG, msg, e)
+            errors.put("$msg: $e")
+
             return ""
         }
     }
@@ -161,7 +178,10 @@ class MmsDumper(val contentResolver: ContentResolver) {
             val stream = contentResolver.openInputStream(partURI)
 
             if (stream == null) {
-                Log.e(TAG, "stream for mms binary part $partURI is null")
+                val msg = "failed opening stream for mms binary part $partURI"
+                Log.e(TAG, msg)
+                errors.put(msg)
+
                 return ""
             }
 
@@ -169,7 +189,10 @@ class MmsDumper(val contentResolver: ContentResolver) {
                 return Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
             }
         } catch (e: IOException) {
-            Log.e(TAG, "failed to read MMS part, assuming empty part", e)
+            val msg = "failed to read MMS part on $partURI"
+            Log.e(TAG, msg, e)
+            errors.put("$msg: $e")
+
             return ""
         }
     }
@@ -191,7 +214,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
             )
 
             if (cursor == null) {
-                Log.e(TAG, "querying address $addrURI failed")
+                val msg = "failed getting addresses on $addrURI"
+                Log.e(TAG, msg)
+                errors.put(msg)
             } else if (cursor.moveToFirst()) {
                 do {
                     jarray.put(cursor.getString(0))

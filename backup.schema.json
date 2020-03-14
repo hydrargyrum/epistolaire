@@ -297,6 +297,15 @@
                     ]
                 }
             }
+        },
+        "errors": {
+            "type": "array",
+            "title": "Backup errors",
+            "description": "Errors encountered when backing up",
+            "items": {
+                "type": "string",
+                "title": "Error message"
+            }
         }
     }
 }
