@@ -47,29 +47,6 @@ class MmsDumper(val contentResolver: ContentResolver) {
         return jarray
     }
 
-    fun allMessages2(): JSONArray {
-        val cursor = contentResolver.query(
-            Uri.parse("content://mms-sms/conversations"), null, null, null, null
-            //Uri.parse("content://mms/"), null, "ct_t=\"application/vnd.wap.multipart.related\"", null, null
-        )
-
-        val jarray = JSONArray()
-
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                jarray.put(Utils().rowToJson(cursor))
-                val last = Utils().rowToJson(cursor)
-                val tid = last.getInt("thread_id")
-                jarray.put(getThread(tid))
-                break
-            } while (cursor.moveToNext())
-
-            cursor.close()
-        }
-
-        return jarray
-    }
-
     fun forceMillisDate(message: JSONObject, field: String) {
         /* sometimes the sms are in millis and the mms in secs... */
         val value = message.optLong(field)
