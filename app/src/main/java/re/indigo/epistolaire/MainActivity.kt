@@ -127,8 +127,18 @@ class MainActivity : AppCompatActivity() {
 
             progressBar.visibility = View.GONE
 
-            Log.i(TAG, "backup successful")
+            val hasErrors = (jobj.getJSONArray("errors").length() > 0)
+            if (hasErrors) {
+                Log.i(TAG, "backup done with some errors")
+            } else {
+                Log.i(TAG, "backup successful")
+            }
+
             addLine("Done! Backup was saved to ${myExternalFile.toURI()}")
+            if (hasErrors) {
+                addLine("Some errors were encountered though")
+            }
+
             addLine("See https://gitlab.com/hydrargyrum/epistolaire for viewing backup as HTML")
         }
     }
