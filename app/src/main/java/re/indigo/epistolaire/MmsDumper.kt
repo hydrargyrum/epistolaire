@@ -12,6 +12,7 @@ import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.io.InputStream
 import java.nio.charset.Charset
 
 
@@ -139,10 +140,14 @@ class MmsDumper(val contentResolver: ContentResolver) {
 
                 if (hasTextValue) {
                     jpart.put("my_content", "")
-                } else if (jpart.getString("ct").startsWith("image/")) {
-                    jpart.put("my_content", getMmsImage(jpart.getInt("_id")))
+                } else if (jpart.getString("ct").startsWith("text/")) {
+                    jpart.put("my_content", usePart(jpart.getInt("_id")) { stream ->
+                        stream.readBytes().toString(Charset.forName("UTF-8"))
+                    })
                 } else {
-                    jpart.put("my_content", getMmsText(jpart.getInt("_id")))
+                    jpart.put("my_content", usePart(jpart.getInt("_id")) { stream ->
+                        Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
+                    })
                 }
                 jarray.put(jpart)
             } while (cursor.moveToNext())
@@ -153,45 +158,20 @@ class MmsDumper(val contentResolver: ContentResolver) {
         return jarray
     }
 
-    fun getMmsText(id: Int): String {
+    fun usePart(id: Int, block: (InputStream) -> String): String {
         val partURI = Uri.parse("content://mms/part/$id")
         try {
             val stream = contentResolver.openInputStream(partURI)
 
             if (stream == null) {
-                val msg = "failed opening stream for mms text part $partURI"
+                val msg = "failed opening stream for mms part $partURI"
                 Log.e(TAG, msg)
                 errors.put(msg)
                 return ""
             }
 
             stream.use {
-                return stream.readBytes().toString(Charset.forName("UTF-8"))
-            }
-        } catch (e: IOException) {
-            val msg = "failed to read MMS text on $partURI"
-            Log.e(TAG, msg, e)
-            errors.put("$msg: $e")
-
-            return ""
-        }
-    }
-
-    fun getMmsImage(id: Int): String {
-        val partURI = Uri.parse("content://mms/part/$id")
-        try {
-            val stream = contentResolver.openInputStream(partURI)
-
-            if (stream == null) {
-                val msg = "failed opening stream for mms binary part $partURI"
-                Log.e(TAG, msg)
-                errors.put(msg)
-
-                return ""
-            }
-
-            stream.use {
-                return Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
+                return block(stream)
             }
         } catch (e: IOException) {
             val msg = "failed to read MMS part on $partURI"
