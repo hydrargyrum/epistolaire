@@ -134,7 +134,12 @@ class MmsDumper(val contentResolver: ContentResolver) {
         } else if (cursor.moveToFirst()) {
             do {
                 val jpart = Utils().rowToJson(cursor)
-                if (jpart.getString("ct").startsWith("image/")) {
+
+                val hasTextValue = (jpart.has("text") && jpart.get("text") is String)
+
+                if (hasTextValue) {
+                    jpart.put("my_content", "")
+                } else if (jpart.getString("ct").startsWith("image/")) {
                     jpart.put("my_content", getMmsImage(jpart.getInt("_id")))
                 } else {
                     jpart.put("my_content", getMmsText(jpart.getInt("_id")))
