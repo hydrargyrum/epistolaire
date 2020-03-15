@@ -1,5 +1,3 @@
-Epistolaire dumps SMSes AND MMSes AND their photos to a JSON file on 
-the phone storage (so you can copy it whatever way you like, Syncthing -
-you name it). The JSON format is relatively simple if you're a developer
-but there's an optional tool to convert it to pretty HTML pages if you want
-to without effort.
+Epistolaire dumps SMSes AND MMSes AND their photos to a JSON file on the phone storage (so you can copy it whatever way you like, rsync, Syncthing, ownCloud - you name it).
+
+There's a tool to convert it to pretty HTML pages if you want to without effort. And if you know a little know a tiny bit of development, the JSON format is straightforward to use.
