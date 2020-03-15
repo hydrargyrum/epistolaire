@@ -1,0 +1,4 @@
+* dump videos and other binary MMS parts in base64
+* skip error when only specific messages can't be backed up
+* but warn if such errors were encountered, so no message is silently ignored
+* write to logcat full stacktrace (in the future, a crash report tool will be used)
