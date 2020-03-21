@@ -17,7 +17,7 @@ import java.nio.charset.Charset
 
 
 class MmsDumper(val contentResolver: ContentResolver) {
-    private val TAG = "MmsDumper"
+    private val TAG = "EpistolaireMmsDumper"
 
     val errors = JSONArray()
 

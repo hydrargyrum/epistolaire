@@ -28,7 +28,7 @@ https://stackoverflow.com/questions/3012287/how-to-read-mms-data-in-android
  */
 
 class MainActivity : AppCompatActivity() {
-    private val TAG = "MainActivity"
+    private val TAG = "EpistolaireMainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
