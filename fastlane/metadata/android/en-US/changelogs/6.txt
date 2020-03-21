@@ -1,0 +1,2 @@
+* avoid a crash when listing SMS/MMS conversations
+* fix icons
