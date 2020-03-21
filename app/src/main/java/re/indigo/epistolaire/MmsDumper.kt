@@ -30,10 +30,9 @@ class MmsDumper(val contentResolver: ContentResolver) {
     }
 
     fun allMessages(): JSONArray {
-        val uri = Uri.parse("content://mms-sms/conversations")
+        val uri = Uri.parse("content://mms-sms/conversations?simple=true")
         val cursor = contentResolver.query(
-            uri, arrayOf("thread_id"), null, null, null
-            //Uri.parse("content://mms/"), null, "ct_t=\"application/vnd.wap.multipart.related\"", null, null
+            uri, arrayOf("_id"), null, null, null
         )
 
         val jarray = JSONArray()
