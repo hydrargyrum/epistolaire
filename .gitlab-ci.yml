@@ -1,0 +1,10 @@
+image: circleci/android:api-29
+
+compile:
+    stage: build
+    script:
+        - ./gradlew assemble
+    artifacts:
+        paths:
+            - ./app/build/outputs/apk/debug/app-debug.apk
+        expire_in: 1 month
