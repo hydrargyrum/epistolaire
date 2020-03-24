@@ -9,6 +9,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Bundle
+import android.util.JsonWriter
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -17,8 +18,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.io.BufferedOutputStream
+import org.json.JSONObject
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 /*
 Róbert Kiszeli https://www.youtube.com/watch?v=ZALMdNgx9bw
@@ -78,16 +82,16 @@ class MainActivity : AppCompatActivity() {
         override fun doInBackground(vararg params: Void?) {
             var written = 0
 
-            val stream = BufferedOutputStream(file.outputStream())
-            val writer = JsonObjectWriter(stream)
+            // make sure we use a buffer, JsonWriter is very inefficient without any
+            val writer = JsonWriter(BufferedWriter(file.writer()))
             writer.beginObject()
-            writer.dumpKey("conversations")
+            writer.name("conversations")
 
             writer.beginArray()
             for (threadId in dumper.conversations()) {
                 writer.beginArray()
                 dumper.foreachThreadMessage(threadId) { jmsg ->
-                    writer.dumpValue(jmsg)
+                    JsonObjectWriter(writer).dump(jmsg)
                     written += 1
                     publishProgress(written)
                 }
@@ -95,8 +99,8 @@ class MainActivity : AppCompatActivity() {
             }
             writer.endArray()
 
-            writer.dumpKey("errors")
-            writer.dumpValue(dumper.errors)
+            writer.name("errors")
+            JsonObjectWriter(writer).dump(dumper.errors)
 
             writer.endObject()
             writer.close()

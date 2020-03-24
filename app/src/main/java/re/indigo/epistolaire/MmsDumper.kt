@@ -11,6 +11,7 @@ import android.util.Base64
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -129,7 +130,7 @@ class MmsDumper(val contentResolver: ContentResolver) {
                     })
                 } else {
                     jpart.put("my_content", usePart(jpart.getInt("_id")) { stream ->
-                        Base64.encodeToString(stream.readBytes(), Base64.NO_WRAP)
+                        Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
                     })
                 }
                 jarray.put(jpart)
@@ -195,4 +196,5 @@ class MmsDumper(val contentResolver: ContentResolver) {
         }
         return jarray
     }
+
 }
