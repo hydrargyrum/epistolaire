@@ -26,10 +26,10 @@
 
     <ProgressBar
         android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
+        android:layout_width="411dp"
         android:layout_height="wrap_content"
-        android:indeterminate="true"
+        android:indeterminate="false"
         android:visibility="invisible"
         app:layout_anchor="@+id/include"
         app:layout_anchorGravity="center" />

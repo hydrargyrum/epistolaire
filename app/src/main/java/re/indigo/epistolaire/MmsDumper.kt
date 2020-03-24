@@ -21,36 +21,77 @@ class MmsDumper(val contentResolver: ContentResolver) {
 
     val errors = JSONArray()
 
-    fun getJson(): JSONObject {
-        val jobj = JSONObject()
-
-        jobj.put("conversations", allMessages())
-        jobj.put("errors", errors)
-        return jobj
+    private fun countRows(uriString: String): Int {
+        val uri = Uri.parse(uriString)
+        val cursor = contentResolver.query(
+            uri, null, null, null, null
+        )
+        if (cursor == null) {
+            return 0
+        }
+        cursor.use {
+            return cursor.count
+        }
     }
 
-    fun allMessages(): JSONArray {
+    fun countAllMessages(): Int {
+        return countRows("content://sms/") + countRows("content://mms/")
+    }
+
+    fun conversations(): ArrayList<Int> {
+        val ret = ArrayList<Int>()
+
         val uri = Uri.parse("content://mms-sms/conversations?simple=true")
         val cursor = contentResolver.query(
             uri, arrayOf("_id"), null, null, null
         )
 
-        val jarray = JSONArray()
-
         if (cursor == null) {
             val msg = "failed to list conversations $uri"
             Log.e(TAG, msg)
-            errors.put(msg)
-        } else if (cursor.moveToFirst()) {
-            do {
-                val threadId = cursor.getInt(0)
-                jarray.put(getThread(threadId))
-            } while (cursor.moveToNext())
-
-            cursor.close()
+            // errors
+        } else {
+            cursor.use {
+                while (cursor.moveToNext()) {
+                    val threadId = cursor.getInt(0)
+                    ret.add(threadId)
+                }
+            }
         }
+        return ret
+    }
 
-        return jarray
+    private fun foreachMessageByType(uriString: String, id: Int, block: (JSONObject) -> Unit) {
+        val uri = Uri.parse(uriString)
+        val cursor = contentResolver.query(
+            uri, null,
+            "thread_id=$id", null, null
+        )
+
+        if (cursor == null) {
+            val msg = "failed to list mms in thread $uri $id"
+            Log.e(TAG, msg)
+        } else {
+            while (cursor.moveToNext()) {
+                val jobj = Utils().rowToJson(cursor)
+
+                forceMillisDate(jobj, "date")
+                forceMillisDate(jobj, "date_sent")
+
+                block(jobj)
+            }
+        }
+    }
+
+    fun foreachThreadMessage(id: Int, block: (JSONObject) -> Unit) {
+        foreachMessageByType("content://sms/", id, block)
+        foreachMessageByType("content://mms/", id) { jmms ->
+            val partId = jmms.getInt("_id")
+            jmms.put("parts", getParts(partId))
+
+            jmms.put("addresses", getMMSAddresses(jmms.getInt("_id")))
+            block(jmms)
+        }
     }
 
     fun forceMillisDate(message: JSONObject, field: String) {
@@ -59,63 +100,6 @@ class MmsDumper(val contentResolver: ContentResolver) {
         if (value != 0L && value < 500000000000L) {
             message.put(field, value * 1000)
         }
-    }
-
-    fun getThread(id: Int): JSONArray {
-        val jarray = JSONArray()
-
-        var uri = Uri.parse("content://sms/")
-        var cursor = contentResolver.query(
-            uri, null,
-            "thread_id=$id", null, null
-        )
-
-        if (cursor == null) {
-            val msg = "failed to list sms in thread $uri $id"
-            Log.e(TAG, msg)
-            errors.put(msg)
-        } else if (cursor.moveToFirst()) {
-            do {
-                val jobj = Utils().rowToJson(cursor)
-
-                forceMillisDate(jobj, "date")
-                forceMillisDate(jobj, "date_sent")
-
-                jarray.put(jobj)
-            } while (cursor.moveToNext())
-
-            cursor.close()
-        }
-
-        uri = Uri.parse("content://mms/")
-        cursor = contentResolver.query(
-            uri, null,
-            "thread_id=$id", null, null
-        )
-
-        if (cursor == null) {
-            val msg = "failed to list mms in thread $uri $id"
-            Log.e(TAG, msg)
-            errors.put(msg)
-        } else if (cursor.moveToFirst()) {
-            do {
-                val jmms = Utils().rowToJson(cursor)
-
-                forceMillisDate(jmms, "date")
-                forceMillisDate(jmms, "date_sent")
-
-                val partId = jmms.getInt("_id")
-                jmms.put("parts", getParts(partId))
-
-                jmms.put("addresses", getMMSAddresses(jmms.getInt("_id")))
-
-                jarray.put(jmms)
-            } while (cursor.moveToNext())
-
-            cursor.close()
-        }
-
-        return jarray
     }
 
     fun getParts(mmsId: Int): JSONArray {
@@ -145,7 +129,7 @@ class MmsDumper(val contentResolver: ContentResolver) {
                     })
                 } else {
                     jpart.put("my_content", usePart(jpart.getInt("_id")) { stream ->
-                        Base64.encodeToString(stream.readBytes(), Base64.DEFAULT)
+                        Base64.encodeToString(stream.readBytes(), Base64.NO_WRAP)
                     })
                 }
                 jarray.put(jpart)
@@ -190,24 +174,24 @@ class MmsDumper(val contentResolver: ContentResolver) {
         val type_cc = 130
         val type_bcc = 129
 
-        for (addrtype in arrayOf(type_from, type_to, type_cc, type_bcc)) {
-            val addrURI = Uri.parse("content://mms/$id/addr")
-            val cursor = contentResolver.query(
-                addrURI, arrayOf("address"),
-                "type=$addrtype AND msg_id=$id", null, null
-            )
+        val addrURI = Uri.parse("content://mms/$id/addr")
+        val cursor = contentResolver.query(
+            addrURI, arrayOf("address", "type"),
+            "msg_id=$id", null, null
+        )
 
-            if (cursor == null) {
-                val msg = "failed getting addresses on $addrURI"
-                Log.e(TAG, msg)
-                errors.put(msg)
-            } else if (cursor.moveToFirst()) {
-                do {
-                    jarray.put(cursor.getString(0))
-                } while (cursor.moveToNext())
-
-                cursor.close()
+        if (cursor == null) {
+            val msg = "failed getting addresses on $addrURI"
+            Log.e(TAG, msg)
+            errors.put(msg)
+        } else {
+            while (cursor.moveToNext()) {
+                when (cursor.getInt(1)) {
+                    type_from, type_to, type_cc, type_bcc -> jarray.put(cursor.getString(0))
+                }
             }
+
+            cursor.close()
         }
         return jarray
     }

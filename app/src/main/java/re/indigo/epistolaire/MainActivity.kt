@@ -17,10 +17,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.json.JSONObject
+import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 /*
 Róbert Kiszeli https://www.youtube.com/watch?v=ZALMdNgx9bw
@@ -50,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         addLine("--------------------")
         addLine("Please wait, backup is in progress. It can take a while if you have a lot of SMSes or MMSes.")
+
         DumpTask().execute()
     }
 
@@ -72,74 +71,63 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    inner class DumpTask : AsyncTask<Void, Int, JSONObject?>() {
+    inner class DumpTask : AsyncTask<Void, Int, Unit>() {
+        val file = File(getExternalFilesDir("."), "backup.json")
         val dumper = MmsDumper(contentResolver)
-        var exc : String? = null
 
-        override fun doInBackground(vararg params: Void?): JSONObject? {
-            try {
-                return dumper.getJson()
-            } catch (e: Exception) {
-                Log.e(TAG, "crash when dumping messages database", e)
-                exc = e.toString()
-                return null
+        override fun doInBackground(vararg params: Void?) {
+            var written = 0
+
+            val stream = BufferedOutputStream(file.outputStream())
+            val writer = JsonObjectWriter(stream)
+            writer.beginObject()
+            writer.dumpKey("conversations")
+
+            writer.beginArray()
+            for (threadId in dumper.conversations()) {
+                writer.beginArray()
+                dumper.foreachThreadMessage(threadId) { jmsg ->
+                    writer.dumpValue(jmsg)
+                    written += 1
+                    publishProgress(written)
+                }
+                writer.endArray()
             }
+            writer.endArray()
+
+            writer.dumpKey("errors")
+            writer.dumpValue(dumper.errors)
+
+            writer.endObject()
+            writer.close()
         }
 
         override fun onPreExecute() {
             super.onPreExecute()
-
             progressBar.visibility = View.VISIBLE
+            progressBar.max = dumper.countAllMessages()
+            Log.i(TAG, "max = ${progressBar.max}")
         }
 
-        override fun onPostExecute(jobj: JSONObject?) {
-            super.onPostExecute(jobj)
-
-            if (exc != null || jobj == null) {
-                progressBar.visibility = View.GONE
-                if (exc != null) {
-                    addLine("Encountered an error dumping database :( " + exc.toString())
-                } else {
-                    Log.e(TAG, "dump is null, why?")
-                    addLine("Encountered an error :( dump is null")
-                }
-                return
-            }
-
-            // TODO: ask where to save? ACTION_OPEN_DOCUMENT_TREE
-
-            val myExternalFile = File(getExternalFilesDir("."), "backup.json")
-            Log.i(TAG, "writing ${myExternalFile}")
-            try {
-                val fileOutPutStream = FileOutputStream(myExternalFile)
-
-                fileOutPutStream.use {
-                    JsonWriter(fileOutPutStream).dump(jobj!!)
-                }
-            } catch (e: IOException) {
-                progressBar.visibility = View.GONE
-
-                Log.e(TAG, "error when writing ${myExternalFile}", e)
-                addLine("Encountered an error writing JSON file :( " + e.toString())
-
-                return
-            }
-
+        override fun onPostExecute(result: Unit?) {
             progressBar.visibility = View.GONE
-
-            val hasErrors = (jobj.getJSONArray("errors").length() > 0)
+            val hasErrors = (dumper.errors.length() > 0)
             if (hasErrors) {
                 Log.i(TAG, "backup done with some errors")
             } else {
                 Log.i(TAG, "backup successful")
             }
 
-            addLine("Done! Backup was saved to ${myExternalFile.toURI()}")
+            addLine("Done! Backup was saved to $file")
             if (hasErrors) {
                 addLine("Some errors were encountered though")
             }
 
             addLine("See https://gitlab.com/hydrargyrum/epistolaire for viewing backup as HTML")
+        }
+
+        override fun onProgressUpdate(vararg values: Int?) {
+            progressBar.progress = values[0]!!
         }
     }
 }
