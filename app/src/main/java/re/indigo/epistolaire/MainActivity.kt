@@ -78,8 +78,18 @@ class MainActivity : AppCompatActivity() {
     inner class DumpTask : AsyncTask<Void, Int, Unit>() {
         val file = File(getExternalFilesDir("."), "backup.json")
         val dumper = MmsDumper(contentResolver)
+        var errorMesage: String? = null
 
         override fun doInBackground(vararg params: Void?) {
+            try {
+                performDump()
+            } catch (exc: IOException) {
+                Log.e(TAG, "error writing dump", exc)
+                errorMesage = exc.toString()
+            }
+        }
+
+        private fun performDump() {
             var written = 0
 
             // make sure we use a buffer, JsonWriter is very inefficient without any
@@ -117,6 +127,12 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPostExecute(result: Unit?) {
             progressContainer.visibility = View.GONE
+
+            if (errorMesage != null) {
+                Log.i(TAG, "backup failed: $errorMesage")
+                addLine("backup failed: $errorMesage :(")
+                return
+            }
 
             val hasErrors = (dumper.errors.length() > 0)
             if (hasErrors) {
