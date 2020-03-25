@@ -1,0 +1,2 @@
+* show a progress bar (with done count / total count)
+* improve dump speed a little
