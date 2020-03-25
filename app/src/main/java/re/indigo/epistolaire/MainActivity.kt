@@ -108,13 +108,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPreExecute() {
             super.onPreExecute()
-            progressBar.visibility = View.VISIBLE
+
+            progressContainer.visibility = View.VISIBLE
             progressBar.max = dumper.countAllMessages()
+            progressText.text = "0 / ${progressBar.max}"
             Log.i(TAG, "max = ${progressBar.max}")
         }
 
         override fun onPostExecute(result: Unit?) {
-            progressBar.visibility = View.GONE
+            progressContainer.visibility = View.GONE
+
             val hasErrors = (dumper.errors.length() > 0)
             if (hasErrors) {
                 Log.i(TAG, "backup done with some errors")
@@ -132,6 +135,10 @@ class MainActivity : AppCompatActivity() {
 
         override fun onProgressUpdate(vararg values: Int?) {
             progressBar.progress = values[0]!!
+            progressText.text = progressText.text.replaceFirst(
+                Regex("""\d+ /"""),
+                "${progressBar.progress} /"
+            )
         }
     }
 }
