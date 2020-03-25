@@ -17,13 +17,18 @@ class Converter:
             self.jfile = json.load(fd)
 
     def convert(self):
+        seen = set()
+
         for conversation in self.jfile['conversations']:
             try:
                 addr = conversation[0]['address'].replace(' ', '')
             except KeyError:
                 addr = ','.join(conversation[0]['addresses']).replace(' ', '')
 
-            outfile = Path(f'{addr}.html')
+            outfile = Path(f"{addr[:200]}{addr[200:] and '...'}.html")
+            if outfile in seen:
+                raise FileExistsError(f"oops, {outfile} has already been used")
+            seen.add(outfile)
 
             hconv = self.build_conversation(conversation)
 
