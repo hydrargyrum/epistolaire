@@ -24,6 +24,8 @@ class Converter:
                 addr = conversation[0]['address'].replace(' ', '')
             except KeyError:
                 addr = ','.join(conversation[0]['addresses']).replace(' ', '')
+            except IndexError:
+                continue
 
             outfile = Path(f"{addr[:200]}{addr[200:] and '...'}.html")
             if outfile in seen:
