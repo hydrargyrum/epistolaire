@@ -6,7 +6,6 @@
 import locale
 import datetime
 from pathlib import Path
-import sys
 import json
 import xml.etree.ElementTree as ET
 
@@ -16,7 +15,7 @@ class Converter:
         with open(path) as fd:
             self.jfile = json.load(fd)
 
-    def convert(self):
+    def convert(self, outpath):
         seen = set()
 
         for conversation in self.jfile['conversations']:
@@ -27,7 +26,7 @@ class Converter:
             except IndexError:
                 continue
 
-            outfile = Path(f"{addr[:200]}{addr[200:] and '...'}.html")
+            outfile = Path(outpath, f"{addr[:200]}{addr[200:] and '...'}.html")
             if outfile in seen:
                 raise FileExistsError(f"oops, {outfile} has already been used")
             seen.add(outfile)
@@ -128,8 +127,20 @@ class Converter:
         hbody.text = jmsg['body']
 
 
-locale.setlocale(locale.LC_ALL, '')
+def main():
+    import argparse
 
-c = Converter()
-c.import_data(sys.argv[1])
-c.convert()
+    locale.setlocale(locale.LC_ALL, '')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file')
+    parser.add_argument('-o', '--output-dir', default='.')
+    args = parser.parse_args()
+
+    c = Converter()
+    c.import_data(args.file)
+    c.convert(args.output_dir)
+
+
+if __name__ == '__main__':
+    main()
