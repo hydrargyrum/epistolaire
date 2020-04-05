@@ -7,7 +7,7 @@ from base64 import b64decode
 from datetime import datetime
 import json
 from email.message import EmailMessage
-from email.utils import localtime, make_msgid
+from email.utils import localtime
 import hashlib
 import locale
 import mailbox
@@ -77,7 +77,6 @@ class Converter:
         dt = datetime.fromtimestamp(jmsg['date'] / 1000)
         set_header(msg, 'Date', localtime(dt))
         # set_header(msg, 'Subject', jmsg['subject'])
-        set_header(msg, 'Message-ID', make_msgid(domain='localhost'))
 
         if 'parts' in jmsg:
             self.build_mms(jmsg, msg)
@@ -87,6 +86,9 @@ class Converter:
         return msg
 
     def build_sms(self, jmsg, msg):
+        id = f"{hexdigest(jmsg['address'])}.{hexdigest(str(jmsg['date']))}"
+        set_header(msg, 'Message-ID', f"<{id}@{self.options.hostname}>")
+
         if jmsg['type'] == 1:
             set_header(msg, 'From', jmsg['address'])
         else:
@@ -103,6 +105,9 @@ class Converter:
     def build_mms(self, jmsg, msg):
         set_header(msg, 'From', jmsg['addresses'][0])
         set_header(msg, 'To', jmsg['addresses'][1:])
+        # MMS has an id, but it may contain reserved characters.
+        # hash it instead of escaping them.
+        set_header(msg, 'Message-ID', f"<{hexdigest(jmsg['m_id'])}@{self.options.hostname}>")
 
         # search for main text because it's harder to add it afterwards
         last_text = ''
