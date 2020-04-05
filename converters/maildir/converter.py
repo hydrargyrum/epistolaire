@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 from email.message import EmailMessage
 from email.utils import localtime, make_msgid
+import hashlib
 import locale
 import mailbox
 from mimetypes import guess_type
@@ -18,7 +19,15 @@ def set_header(msg, k, v):
     msg[k] = v
 
 
+def hexdigest(s):
+    return hashlib.md5(s.encode('utf-8')).hexdigest()
+
+
 class Converter:
+    def __init__(self, options):
+        super().__init__()
+        self.options = options
+
     def import_data(self, path):
         with open(path) as fd:
             self.jfile = json.load(fd)
@@ -33,15 +42,34 @@ class Converter:
             for jmsg in jconversation:
                 msg = self.build_message(jmsg)
 
-                if first_id is None:
-                    first_id = msg['Message-ID']
-                else:
-                    set_header(msg, 'In-reply-to', first_id)
+                if self.options.threading:
+                    # create a fake empty root message for each conversation
+
+                    if first_id is None:
+                        if 'address' in jmsg:  # sms
+                            root = self.build_fake_root([jmsg['address']])
+                        elif 'addresses' in jmsg:
+                            root = self.build_fake_root(jmsg['addresses'])
+                        else:
+                            raise NotImplementedError('no address in the first message')
+
+                        # conv_messages.append(root)
+                        first_id = root['Message-ID']
+
+                    set_header(msg, 'References', first_id)
 
                 conv_messages.append(msg)
 
             for msg in conv_messages:
                 box.add(msg)
+
+    def build_fake_root(self, addresses):
+        addresses = sorted(addresses)  # ensure consistency
+
+        msg = EmailMessage()
+        set_header(msg, 'Message-ID', f"<{hexdigest(','.join(addresses))}@{self.options.hostname}>")
+        set_header(msg, 'Subject', f"Conversation with {', '.join(addresses)}")
+        return msg
 
     def build_message(self, jmsg):
         msg = EmailMessage()
@@ -120,9 +148,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('file')
     parser.add_argument('output_dir')
+    parser.add_argument('--hostname', default='localhost')
+    parser.add_argument(
+        '--disable-threading', action='store_const',
+        dest='threading', const=False, default=True,
+    )
     args = parser.parse_args()
 
-    c = Converter()
+    c = Converter(args)
     c.import_data(args.file)
     c.convert(args.output_dir)
 
