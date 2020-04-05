@@ -58,6 +58,9 @@ class Converter:
 
                     set_header(msg, 'References', first_id)
 
+                msg = mailbox.MaildirMessage(msg)
+                if jmsg.get('read', False):
+                    msg.add_flag('S')
                 conv_messages.append(msg)
 
             for msg in conv_messages:
