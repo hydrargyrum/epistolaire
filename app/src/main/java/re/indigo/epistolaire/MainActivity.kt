@@ -31,6 +31,7 @@ https://stackoverflow.com/questions/3012287/how-to-read-mms-data-in-android
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "EpistolaireMainActivity"
+    private val SMS_PERM_REQUEST = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +46,34 @@ class MainActivity : AppCompatActivity() {
         }
          */
 
-        val wtf = 2
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_SMS), wtf)
-        }
-
         addLine("--------------------")
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED) {
+            startDump()
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_SMS), SMS_PERM_REQUEST)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            SMS_PERM_REQUEST -> {
+                if (!grantResults.isEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    addLine("Permission granted!")
+                    startDump()
+                } else {
+                    addLine("Permission denied, the app cannot backup SMSes if it cannot read SMSes...")
+                }
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    fun startDump() {
         addLine("Please wait, backup is in progress. It can take a while if you have a lot of SMSes or MMSes.")
 
         DumpTask().execute()
