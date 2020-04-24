@@ -1,0 +1,2 @@
+* on first start, wait until permission is granted to backup
+* update F-Droid screenshot
