@@ -58,8 +58,6 @@ class Converter:
 
     def build_mms(self, jmsg, hconv):
         parts = jmsg['parts']
-        text_part = next((part for part in parts if part['ct'] == 'text/plain'), None)
-        img_part = next((part for part in parts if part['ct'].startswith('image/')), None)
 
         is_received = jmsg['msg_box'] == 1
         dt = datetime.datetime.fromtimestamp(jmsg['date'] / 1000)
@@ -82,17 +80,18 @@ class Converter:
             })
         htime.text = dt.strftime('%Y-%m-%d %H:%M:%S')
 
-        if img_part:
-            hdimg = ET.SubElement(hmsg, 'div')
-            ET.SubElement(
-                hdimg, 'img', **{
-                    'class': 'message-photo',
-                    'src': f'data:{img_part["ct"]};base64,{img_part["my_content"]}',
-                })
+        for part in parts:
+            if part['ct'].startswith('image/'):
+                hdimg = ET.SubElement(hmsg, 'div')
+                ET.SubElement(
+                    hdimg, 'img', **{
+                        'class': 'message-photo',
+                        'src': f'data:{img_part["ct"]};base64,{img_part["my_content"]}',
+                    })
 
-        if text_part:
-            hbody = ET.SubElement(hmsg, 'div', **{'class': 'message-body'})
-            hbody.text = text_part['text']
+            elif part['ct'] == 'text/plain':
+                hbody = ET.SubElement(hmsg, 'div', **{'class': 'message-body'})
+                hbody.text = text_part['text']
 
     def build_sms(self, jmsg, hconv):
         is_received = jmsg['type'] == 1
