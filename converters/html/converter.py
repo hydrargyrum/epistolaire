@@ -86,12 +86,12 @@ class Converter:
                 ET.SubElement(
                     hdimg, 'img', **{
                         'class': 'message-photo',
-                        'src': f'data:{img_part["ct"]};base64,{img_part["my_content"]}',
+                        'src': f'data:{part["ct"]};base64,{part["my_content"]}',
                     })
 
             elif part['ct'] == 'text/plain':
                 hbody = ET.SubElement(hmsg, 'div', **{'class': 'message-body'})
-                hbody.text = text_part['text']
+                hbody.text = part['text']
 
     def build_sms(self, jmsg, hconv):
         is_received = jmsg['type'] == 1
