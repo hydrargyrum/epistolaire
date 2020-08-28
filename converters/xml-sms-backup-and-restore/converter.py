@@ -22,7 +22,7 @@ def stringify_values(d):
 
 class Converter:
     def import_data(self, path):
-        with open(path) as fd:
+        with open(path, encoding='utf-8') as fd:
             self.jfile = json.load(fd)
 
     def convert(self, outpath):
