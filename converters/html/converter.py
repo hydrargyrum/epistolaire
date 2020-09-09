@@ -24,9 +24,9 @@ class Converter:
 
         def convert_conversation(conversation):
             try:
-                addr = conversation[0]['address'].replace(' ', '')
-            except KeyError:
                 addr = ','.join(conversation[0]['addresses']).replace(' ', '')
+            except KeyError:
+                addr = conversation[0]['address'].replace(' ', '')
             except IndexError:
                 return
 
