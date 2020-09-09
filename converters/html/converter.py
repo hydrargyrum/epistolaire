@@ -4,10 +4,14 @@
 # See LICENSE file for details.
 
 import locale
+import logging
 import datetime
 from pathlib import Path
 import json
 import xml.etree.ElementTree as ET
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Converter:
@@ -18,13 +22,13 @@ class Converter:
     def convert(self, outpath):
         seen = set()
 
-        for conversation in self.jfile['conversations']:
+        def convert_conversation(conversation):
             try:
                 addr = conversation[0]['address'].replace(' ', '')
             except KeyError:
                 addr = ','.join(conversation[0]['addresses']).replace(' ', '')
             except IndexError:
-                continue
+                return
 
             outfile = Path(outpath, f"{addr[:200]}{addr[200:] and '...'}.html")
             if outfile in seen:
@@ -41,6 +45,14 @@ class Converter:
             hbody.append(hconv)
             with outfile.open('wb') as fd:
                 fd.write(ET.tostring(html, method='html'))
+
+            LOGGER.info('done conversation %r', addr)
+
+        for conversation in self.jfile['conversations']:
+            try:
+                convert_conversation(conversation)
+            except Exception as exc:
+                LOGGER.exception('could not convert a conversation: %s', exc)
 
     def build_conversation(self, jconv):
         hconv = ET.Element('div', **{
@@ -93,6 +105,8 @@ class Converter:
                 hbody = ET.SubElement(hmsg, 'div', **{'class': 'message-body'})
                 hbody.text = part['text']
 
+        LOGGER.debug('done mms %r', jmsg['_id'])
+
     def build_sms(self, jmsg, hconv):
         is_received = jmsg['type'] == 1
         dt = datetime.datetime.fromtimestamp(jmsg['date'] / 1000)
@@ -125,6 +139,8 @@ class Converter:
         hbody = ET.SubElement(hmsg, 'div', **{'class': 'message-body'})
         hbody.text = jmsg['body']
 
+        LOGGER.debug('done sms %r', jmsg['_id'])
+
 
 def main():
     import argparse
@@ -134,7 +150,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('file')
     parser.add_argument('-o', '--output-dir', default='.')
+    parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
+
+    levels = {
+        False: logging.INFO,
+        True: logging.DEBUG,
+    }
+    logging.basicConfig(
+        level=levels[args.verbose],
+        format='%(message)s'
+    )
 
     c = Converter()
     c.import_data(args.file)
