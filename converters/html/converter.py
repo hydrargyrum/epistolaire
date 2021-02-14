@@ -19,7 +19,7 @@ class Converter:
         with open(path, encoding='utf-8') as fd:
             self.jfile = json.load(fd)
 
-    def convert(self, outpath):
+    def convert(self, outpath, css_text=None):
         seen = set()
 
         def convert_conversation(conversation):
@@ -39,8 +39,12 @@ class Converter:
 
             html = ET.Element('html')
             hhead = ET.SubElement(html, 'head')
+
             ET.SubElement(hhead, 'link', rel='stylesheet', href='https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.css')
-            ET.SubElement(hhead, 'link', rel='stylesheet', href='style.css')
+            if css_text:
+                hstyle = ET.SubElement(hhead, 'style')
+                hstyle.text = css_text
+
             hbody = ET.SubElement(html, 'body')
             hbody.append(hconv)
             with outfile.open('wb') as fd:
@@ -151,6 +155,9 @@ def main():
     parser.add_argument('file')
     parser.add_argument('-o', '--output-dir', default='.')
     parser.add_argument('-v', '--verbose', action='store_true')
+
+    default_css = Path(__file__).with_name('style.css')
+    parser.add_argument('--include-css', metavar='FILE', default=default_css)
     args = parser.parse_args()
 
     levels = {
@@ -162,9 +169,13 @@ def main():
         format='%(message)s'
     )
 
+    css_text = None
+    if args.include_css:
+        css_text = Path(args.include_css).read_text()
+
     c = Converter()
     c.import_data(args.file)
-    c.convert(args.output_dir)
+    c.convert(args.output_dir, css_text)
 
 
 if __name__ == '__main__':
