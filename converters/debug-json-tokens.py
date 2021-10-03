@@ -45,7 +45,7 @@ class Parser:
 		self.process_value()
 		self.chomp_spaces()
 		if not self.is_at_end():
-			raise InvalidJson(f"Extra data at {self.index}")
+			raise InvalidJson(f"Extra data at {self.index}, got {self.buf[index]!r}")
 
 	def chomp_spaces(self):
 		while True:
@@ -78,7 +78,7 @@ class Parser:
 					self.leave_dict()
 					return
 				else:
-					raise InvalidJson(f"Expected '}}' or string key at {self.index}")
+					raise InvalidJson(f"Expected '}}' or string key at {self.index}, got {c!r}")
 
 			elif state == DictState.KEY:
 				if c == '"':
@@ -86,7 +86,7 @@ class Parser:
 					self.process_obj_string()
 					state = DictState.COLON
 				else:
-					raise InvalidJson(f"Expected string key at {self.index}")
+					raise InvalidJson(f"Expected string key at {self.index}, got {c!r}")
 
 			elif state == DictState.COLON:
 				if c == ":":
@@ -94,7 +94,7 @@ class Parser:
 					state = DictState.VALUE
 					self.found_colon()
 				else:
-					raise InvalidJson(f"Expected ':' at {self.index}")
+					raise InvalidJson(f"Expected ':' at {self.index}, got {c!r}")
 
 			elif state == DictState.VALUE:
 				self.process_value()
@@ -110,7 +110,7 @@ class Parser:
 					state = DictState.KEY
 					self.found_comma()
 				else:
-					raise InvalidJson(f"Expected '}}' or ',' at {self.index}")
+					raise InvalidJson(f"Expected '}}' or ',' at {self.index}, got {c!r}")
 
 			else:
 				raise NotImplementedError()
@@ -147,7 +147,7 @@ class Parser:
 					state = ListState.VALUE
 					self.found_comma()
 				else:
-					raise InvalidJson(f"Expecting ']' or ',' at {self.index}")
+					raise InvalidJson(f"Expecting ']' or ',' at {self.index}, got {c!r}")
 
 			else:
 				raise NotImplementedError()
@@ -202,6 +202,9 @@ class Parser:
 	def process_value(self):
 		self.chomp_spaces()
 
+		if self.is_at_end():
+			raise InvalidJson("EOF while searching a value")
+
 		c = self.buf[self.index]
 		if c in "-0123456789":
 			self.process_obj_number()
@@ -219,7 +222,7 @@ class Parser:
 		else:
 			match = self.const_re.match(self.buf, self.index)
 			if not match:
-				raise InvalidJson(f"Could not recognize value at {self.index}")
+				raise InvalidJson(f"Could not recognize value at {self.index}, got {c!r}")
 			self.found_const(match.group())
 			self.index = match.end()
 
