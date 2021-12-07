@@ -8,6 +8,7 @@ import logging
 import datetime
 from pathlib import Path
 import json
+import ijson
 import xml.etree.ElementTree as ET
 
 
@@ -15,11 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Converter:
-    def import_data(self, path):
-        with open(path, encoding='utf-8') as fd:
-            self.jfile = json.load(fd)
-
-    def convert(self, outpath, css_text=None):
+    def convert(self, inpath, outpath, css_text=None):
         seen = set()
 
         def convert_conversation(conversation):
@@ -52,7 +49,7 @@ class Converter:
 
             LOGGER.info('done conversation %r', addr)
 
-        for conversation in self.jfile['conversations']:
+        for conversation in ijson.items( open(inpath), 'conversations.item' ):
             try:
                 convert_conversation(conversation)
             except Exception as exc:
@@ -174,9 +171,9 @@ def main():
         css_text = Path(args.include_css).read_text()
 
     c = Converter()
-    c.import_data(args.file)
-    c.convert(args.output_dir, css_text)
+    c.convert(args.file, args.output_dir, css_text)
 
 
 if __name__ == '__main__':
     main()
+
