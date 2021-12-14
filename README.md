@@ -40,6 +40,10 @@ It will create an HTML file per conversation.
     cd viewer
     ./converter.py path/to/backup.json
 
+If your JSON file is very big, Python might not be able to load the whole file in RAM and thus crash.
+Installing `ijson` (with `sudo apt install python3-ijson` or `pip install ijson`) will make the converter
+able to process the JSON data without loading everything in memory at once.
+
 ## Privacy
 
 Epistolaire doesn't upload your messages anywhere. It just dumps a JSON file on your device.

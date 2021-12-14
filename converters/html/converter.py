@@ -8,7 +8,6 @@ import logging
 import datetime
 from pathlib import Path
 import json
-import ijson
 import xml.etree.ElementTree as ET
 
 
@@ -16,6 +15,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Converter:
+    @staticmethod
+    def iter_conversations(inpath):
+        try:
+            import ijson
+
+        except ImportError:
+            with open(inpath, encoding="utf-8") as fd:
+                data = json.load(fd)
+            yield from data["conversations"]
+
+        else:
+            with open(inpath, encoding="utf-8") as fd:
+                # if we return instead of yield, the file will be closed when
+                # caller gets the value, and thus can't iterate on anything
+                yield from ijson.items(fd, "conversations.item")
+
     def convert(self, inpath, outpath, css_text=None):
         seen = set()
 
@@ -49,7 +64,7 @@ class Converter:
 
             LOGGER.info('done conversation %r', addr)
 
-        for conversation in ijson.items( open(inpath), 'conversations.item' ):
+        for conversation in self.iter_conversations(inpath):
             try:
                 convert_conversation(conversation)
             except Exception as exc:
